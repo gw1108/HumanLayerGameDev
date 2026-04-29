@@ -62,9 +62,7 @@ Save the refined research document by running:
 python create_thought.py research <file_name_description> <content> [ticket]
 ```
  
-Where `<file_name_description>` is a short summary of the topic, `<content>` is the content of the output file (see format below), and `[ticket]` is the optional ticket if mentioned.
- 
-Then tell the user where it was saved.
+Where `<file_name_description>` is a short summary of the topic, `<content>` is the content of the output file (see format below), and `[ticket]` is the optional ticket if mentioned. Tell the user where it was saved.
 
 ## Output file format
 
