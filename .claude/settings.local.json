@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "Bash(tasklist:*)",
+      "mcp__coplay-mcp__create_game_object",
+      "mcp__coplay-mcp__create_material",
+      "mcp__coplay-mcp__list_unity_project_roots",
+      "mcp__coplay-mcp__set_unity_project_root",
+      "mcp__coplay-mcp__assign_material",
+      "mcp__UnityMCP__batch_execute",
+      "mcp__UnityMCP__script_apply_edits",
+      "mcp__UnityMCP__apply_text_edits",
+      "mcp__UnityMCP__create_script",
+      "mcp__UnityMCP__read_console",
+      "mcp__UnityMCP__refresh_unity",
+      "mcp__UnityMCP__manage_gameobject",
+      "mcp__UnityMCP__execute_code",
+      "mcp__UnityMCP__manage_camera",
+      "Bash(xargs basename:*)",
+      "Bash(grep -r \"ScriptableObject\" /c/GameDev/CozySim/Assets/_Scripts/*.cs)",
+      "Bash(xargs grep:*)",
+      "Bash(powershell:*)",
+      "Bash(find \"/c/GameDev/CozySim/Assets/_Scripts\" -name \"*.cs\" -exec grep -l \"FBPP\" {} \\\\;)",
+      "Bash(grep -E \"\\\\.\\(cs|prefab\\)$\")",
+      "Bash(find \"/c/GameDev/CozySim\" -name \"*.cs\" -exec grep -l \"^.*FBPP\" {} \\\\;)",
+      "mcp__coplay-mcp__check_compile_errors",
+      "mcp__coplay-mcp__get_unity_logs",
+      "Bash(find C:\\\\GameDev\\\\CozySim\\\\Assets\\\\_Scripts *)",
+      "Bash(grep -E \"\\\\.\\(prefab|unity\\)$\")",
+      "Bash(grep -r \"FindObjectOfType\\\\|GetComponent\" /c/GameDev/CozySim/Assets/_Scripts/Minigame/*.cs)",
+      "Bash(xargs wc *)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet build *)",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(git lfs *)"
+    ]
+  }
+}
