@@ -48,31 +48,31 @@ Wait for ALL sub-agents to complete before proceeding. Then:
 - Explicitly check each edge case listed in the question file
 - Note any areas that remain unresolved
 
-### 4. Gather metadata
+### 4. Write the research document
 
-```bash
-bash hack/spec_metadata.sh
-```
+Saving is a two-step process to avoid shell-quoting bugs with large markdown content:
 
-### 5. Write the research document
-
-Save the refined research document by running:
+**Step 1** — get the target path by running:
 
 ```
-python create_thought.py research <file_name_description> <content> [ticket]
+python "$(git rev-parse --show-toplevel)/create_thought.py" research <file_name_description> [ticket]
 ```
- 
-Where `<file_name_description>` is a short summary of the topic, `<content>` is the content of the output file (see format below), and `[ticket]` is the optional ticket if mentioned. Tell the user where it was saved.
+
+The `$(git rev-parse --show-toplevel)` resolves to the repo root with forward slashes, so the command works from any subdirectory and avoids Bash interpreting backslashes in a Windows path as escape characters.
+
+Where `<file_name_description>` is a short kebab-case summary of the topic, and `[ticket]` is the optional ticket if mentioned. The script prints the absolute path to stdout (and creates the parent directory). It does NOT write the file.
+
+**Step 2** — use the `Write` tool directly to write the content (formatted per the template below) to that printed path.
+
+Do not pause to summarize the findings or ask for confirmation before saving.
 
 ## Output file format
 
 ```markdown
 ---
-researcher: [from metadata]
 topic: "[refined question topic]"
 tags: [research, codebase, relevant-component-names]
 status: complete
-last_updated_by: [researcher name]
 source_question: [path to the question file]
 ---
 
@@ -115,31 +115,15 @@ source_question: [path to the question file]
 [Anything that needs further investigation]
 ```
 
-### 6. Add GitHub permalinks (if applicable)
+### 5. Report the export
 
-```bash
-git branch --show-current && git status
+After writing, your entire reply to the user is the single line:
+
+```
+I have exported your research into [FULL_FILE_PATH]
 ```
 
-If on main/master or the commit is pushed, get repo info:
-
-```bash
-gh repo view --json owner,name
-```
-
-Replace local file references in the research document with permalinks: `https://github.com/{owner}/{repo}/blob/{commit}/{file}#L{line}`
-
-### 7. Present findings
-
-Give the user:
-- A concise summary of what was found
-- Path to the research document
-- Any open questions
-
-To continue with follow-up questions:
-```
-/iterate_research_codebase [research-doc-path]
-```
+Replace `[FULL_FILE_PATH]` with the absolute path printed by `create_thought.py`. Do not summarize findings, list open questions, or add follow-up instructions — the user can read the document directly and run `/iterate_research_codebase [research-doc-path]` if they want follow-ups.
 
 ## Notes
 
@@ -147,5 +131,4 @@ To continue with follow-up questions:
 - Document what IS — describe current state without recommendations, critique, or suggestions
 - Keep the main agent focused on synthesis; sub-agents do the deep reading
 - Always wait for all sub-agents before synthesizing (step 3 before step 4)
-- Always gather metadata before writing the document (step 4 before step 5)
 - Always read referenced files fully before spawning sub-agents (step 1)

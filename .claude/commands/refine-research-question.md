@@ -77,16 +77,30 @@ Aim for two or three rounds at most. If the user seems impatient or says "just g
 If the user's original question was already sharp, say so, skip extra rounds, and go straight to saving.
  
 ### 6. Save the refined question
- 
-Save the refined question by running:
- 
+
+Saving is a two-step process to avoid shell-quoting bugs with large markdown content:
+
+**Step 1** — get the target path by running:
+
 ```
-python create_thought.py questions <file_name_description> <content> [ticket]
+python "$(git rev-parse --show-toplevel)/create_thought.py" questions <file_name_description> [ticket]
 ```
- 
-Where `<file_name_description>` is a short summary of the topic, `<content>` is the content of the output file (see format below), and `[ticket]` is the optional ticket if mentioned.
- 
-Then tell the user where it was saved.
+
+The `$(git rev-parse --show-toplevel)` resolves to the repo root with forward slashes, so the command works from any subdirectory and avoids Bash interpreting backslashes in a Windows path as escape characters.
+
+Where `<file_name_description>` is a short kebab-case summary of the topic, and `[ticket]` is the optional ticket if mentioned. The script prints the absolute path to stdout (and creates the parent directory). It does NOT write the file.
+
+**Step 2** — use the `Write` tool directly to write the content (formatted per the template below) to that printed path.
+
+Do not pause to summarize the refined question or ask for confirmation before saving — the iteration in step 5 is the agreement.
+
+After writing, your entire reply to the user is the single line:
+
+```
+I have exported your refined research question into [FULL_FILE_PATH]
+```
+
+Replace `[FULL_FILE_PATH]` with the absolute path printed by `create_thought.py`. Do not restate the refined question, list research areas, or add any other content.
  
 ## Output file format
  
@@ -121,7 +135,3 @@ ticket: [ticket id, or omit]
 ## Files Provided by User
 - `path/to/file.md` — [why it's relevant]
 ```
- 
-## Notes
- 
-- Keep the conversation efficient. If a single round of clarification is enough, one round is enough.

@@ -43,28 +43,31 @@ Only ask about decisions that genuinely affect the implementation path. Do not p
 - If the user's answer reveals a misunderstanding, spawn a **codebase-analyzer** or **codebase-locator** sub-agent to verify the facts, then re-present.
 - Keep iterating until every major design axis is resolved.
 
-### 4. Summarize and confirm
+### 4. Save the design
 
-Once all decisions are made, show a concise summary:
+Once all design decisions are resolved through the iteration in step 3, save immediately. Do not pause to summarize the agreed design or ask for confirmation before saving — the iteration in step 3 is the agreement.
 
-```
-**Agreed Design:**
-- [Decision 1]: [chosen approach]
-- [Decision 2]: [chosen approach]
-- [Out of scope]: [explicit exclusions]
+Saving is a two-step process to avoid shell-quoting bugs with large markdown content:
 
-Does this capture the design correctly?
-```
-
-Wait for user confirmation before saving.
-
-### 5. Save the design
+**Step 1** — get the target path by running:
 
 ```
-python create_thought.py claude-code-design <file_name_description> <content> [ticket]
+python "$(git rev-parse --show-toplevel)/create_thought.py" claude-code-design <file_name_description> [ticket]
 ```
 
-Where `<file_name_description>` is a short topic label and `<content>` is the output file contents (see format below). Tell the user where it was saved.
+The `$(git rev-parse --show-toplevel)` resolves to the repo root with forward slashes, so the command works from any subdirectory and avoids Bash interpreting backslashes in a Windows path as escape characters.
+
+Where `<file_name_description>` is a short kebab-case topic label, and `[ticket]` is optional. The script prints the absolute path to stdout (and creates the parent directory). It does NOT write the file.
+
+**Step 2** — use the `Write` tool directly to write the content (formatted per the template below) to that printed path.
+
+After writing, your entire reply to the user is the single line:
+
+```
+I have exported your design into [FULL_FILE_PATH]
+```
+
+Replace `[FULL_FILE_PATH]` with the absolute path printed by `create_thought.py`. Do not summarize the design, list decisions, or add any other content.
 
 ## Output file format
 
@@ -91,11 +94,11 @@ Where `<file_name_description>` is a short topic label and `<content>` is the ou
 [Explicit list of things we are NOT doing]
 
 ## Open Questions
-[Anything that still needs clarification before structure can be built]
+[Anything that still needs clarification before a plan can be written]
 ```
 
 ## Notes
 
-- Do not write a plan or list implementation steps — that is for `/create_structure`.
+- Do not write a plan or list implementation steps — that is for `/create_plan_greenunity`.
 - Stay skeptical: if a design choice seems to contradict what the research found, say so.
 - All decisions must be resolved before saving. Do not save a design with unresolved questions.
