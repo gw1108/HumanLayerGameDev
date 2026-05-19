@@ -8,7 +8,12 @@ If you have claude code simply copy and paste the .claude + create_thought.py. I
 ## Example Adaptation Prompt
 
 ```
-Carefully examine the refine-research-question, research-codebase, research-codebase-skip, iterate-research-codebase, implement_plan_yolo, create_design commands under .claude/commands. They might not be perfect fits for our repository. They might have incorrect project folder structure. They might also be unity/C# specific instead of using the technology stack this project is using. Update and fix any issues you see.
+Carefully examine the refine-research-question, research-codebase,
+research-codebase-skip, iterate-research-codebase, implement_plan_yolo,
+create_design commands under .claude/commands. They might not be perfect
+fits for our repository. They might have incorrect project folder
+structure. They might also be unity/C# specific instead of using the
+technology stack this project is using. Update and fix any issues you see.
 ```
 
 # What pipeline.py does
