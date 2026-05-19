@@ -13,4 +13,4 @@ Carefully examine the refine-research-question, research-codebase, research-code
 
 # What pipeline.py does
 
-Run pipeline.py to automate RPI.
+Chains `refine → research → design → plan → implement` by launching `claude` per stage and feeding each stage's tagged output into the next. See [hack/README.md](hack/README.md) for details.
