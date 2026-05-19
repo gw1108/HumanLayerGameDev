@@ -5,6 +5,12 @@ Copy of HumanLayer skills Research/Plan/Implement. Now updated to be more Unity 
 
 If you have claude code simply copy and paste the .claude + create_thought.py. If you want the pipeline.py as well copy the hack folder and any files that are needed from there (should just be pipeline.py). If you don't like the folder structure, ask the LLM to move stuff around and fix the scripts.
 
+## Example Adaptation Prompt
+
+```
+Carefully examine the refine-research-question, research-codebase, research-codebase-skip, iterate-research-codebase, implement_plan_yolo, create_design commands under .claude/commands. They might not be perfect fits for our repository. They might have incorrect project folder structure. They might also be unity/C# specific instead of using the technology stack this project is using. Update and fix any issues you see.
+```
+
 # What pipeline.py does
 
 Run pipeline.py to automate RPI.
