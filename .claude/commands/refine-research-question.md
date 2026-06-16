@@ -1,18 +1,36 @@
 ---
 name: refine_research_question
-description: Refine and sharpen a research question. The skill works interactively: it decomposes the question into composable research areas, asks clarifying and edge-case questions, iterates with the user until the question is sharp, and saves the refined question to thoughts/shared/questions/.
+description: Refine and sharpen a research question. The skill works interactively. it decomposes the question into composable research areas, asks clarifying and edge-case questions, iterates with the user until the question is sharp, and saves the refined question to thoughts/shared/questions/.
 model: opus
+allowed-tools:
+  - Write
+  - AskUserQuestion
+  - Bash(git rev-parse:*)
+  - Bash(python:*)
 ---
  
 # Refine Research Question
  
-You are tasked with sharpening a fuzzy research question about a codebase. The output is a refined question(s) saved to `thoughts/shared/questions/`, which `/research_codebase` later reads as its starting point.
+You are tasked with sharpening a fuzzy research question about a codebase. The output is a refined question(s) saved to `thoughts/shared/questions/`, which `/research-codebase` later reads as its starting point.
  
-## Your job is to refine questions, not research
- 
-You work with the user to take a vague question and turn it into a sharp one — by working back and forth with the user. The output is a saved question file that `/research_codebase` consumes.
- 
-If the user references a specific file in their question — a ticket, a design doc, a JSON spec, a PR description — read that file fully. It's context for the question itself.
+## Your job is to edit the question, not to answer it
+
+You work with the user to turn a vague question into a sharp one, purely by working back and forth with them and editing the text of their question or prompt. You are an **editor of the prompt**, not an investigator. Every improvement you make comes from reasoning about the question itself and from the user's answers — never from inspecting the repository. The output is a saved question file that `/research-codebase` consumes; that later skill is where the actual codebase investigation happens.
+
+### Hard constraints — do NOT do any of these
+
+This skill operates on the question text alone. You must not:
+
+- Read, search, or browse any files — source code, docs, *or files the user references*. You do not open files at all.
+- Inspect the repo with git in any form — no `git log`, `git status`, `git diff`, `git blame`, `git show`
+- Spawn sub-agents or research agents of any kind
+- Do web research
+
+If you catch yourself wanting to look something up to settle a question, that is a signal the question is unresolved — turn it into a clarifying question for the user instead of investigating it yourself. Leaving things open is correct here; resolving them is `/research-codebase`'s job, not yours.
+
+**Files the user references** are *not* yours to open. Record their paths and pass them through in the output file's `Files Provided by User` section so `/research-codebase` reads them when it runs. If the user's intent genuinely depends on a file's contents, ask the user to tell you what's in it rather than opening it yourself.
+
+**The only commands you may run** are the two needed to save the result: `git rev-parse --show-toplevel` to find the repo root and `python create_thought.py …` to get the output path, both described in step 6.
  
 ## Initial setup
  
@@ -26,13 +44,13 @@ Then wait for the user's question.
  
 ## Steps
  
-### 1. Read any directly mentioned files
+### 1. Note any directly mentioned files — do not open them
  
-If the user references specific files, tickets, or docs in their question, read them in full before doing anything else. Read entire files (no offsets or limits).
+If the user references specific files, tickets, or docs in their question, record their paths so they carry into the `Files Provided by User` section of the output file. Do **not** open or read them — `/research-codebase` reads them when it runs. If you need to know what's in a referenced file to sharpen the question, ask the user to summarize it for you.
  
 ### 2. Decompose and think hard about underlying intent
  
-Take real time here. The user gave you their surface-level framing, and the research areas they actually need investigated are often broader, narrower, or sideways from what they literally asked.
+Take real time here, reasoning from the question text and the user's answers alone — not from anything in the repo. The research areas you produce are *labels that scope the later research*, not things you investigate now. The user gave you their surface-level framing, and the research areas they actually need investigated are not always what they literally asked.
  
 Think about:
 - What composable research areas does this question break into? Components, layers, concepts, data flows, lifecycles, integration points.
@@ -133,5 +151,6 @@ ticket: [ticket id, or omit]
 - ...
  
 ## Files Provided by User
-- `path/to/file.md` — [why it's relevant]
+[Paths the user referenced, passed through for `/research-codebase` to read. Do not open these yourself.]
+- `path/to/file.md` — [what the user said it's for]
 ```
