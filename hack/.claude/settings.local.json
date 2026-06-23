@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python \"$\\(git rev-parse --show-toplevel\\)/create_thought.py\" --help)",
-      "mcp__coplay-mcp__check_compile_errors"
-    ]
-  }
-}
