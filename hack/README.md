@@ -9,7 +9,7 @@
 | 1 | Refine the question | `/refine-research-question` | `thoughts/shared/questions/*.md` |
 | 2 | Research the codebase | `/research-codebase` | `thoughts/shared/research/*.md` |
 | 3 | Settle on a design | `/create_design` | `thoughts/shared/claude-code-design/*.md` |
-| 4 | Write an implementation plan | `/create_plan_greenunity` | `thoughts/shared/plans/*.md` |
+| 4 | Write an implementation plan | `/create_plan` | `thoughts/shared/plans/*.md` |
 | 5 | Execute the plan | `/implement_plan_yolo` | Code changes (runs to natural completion) |
 
 ## How auto-advance works

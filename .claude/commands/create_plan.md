@@ -1,5 +1,5 @@
 ---
-name: create_plan_greenunity
+name: create_plan
 description: Read a design document and write an actionable implementation plan with code-level steps. Saves the plan to thoughts/shared/plans/.
 model: sonnet
 ---

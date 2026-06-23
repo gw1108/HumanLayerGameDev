@@ -99,6 +99,6 @@ Replace `[FULL_FILE_PATH]` with the absolute path printed by `create_thought.py`
 
 ## Notes
 
-- Do not write a plan or list implementation steps — that is for `/create_plan_greenunity`.
+- Do not write a plan or list implementation steps — that is for `/create_plan`.
 - Stay skeptical: if a design choice seems to contradict what the research found, say so.
 - All decisions must be resolved before saving. Do not save a design with unresolved questions.
