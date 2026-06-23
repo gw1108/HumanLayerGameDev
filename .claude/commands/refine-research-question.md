@@ -4,9 +4,10 @@ description: Refine and sharpen a research question. The skill works interactive
 model: opus
 allowed-tools:
   - Write
-  - AskUserQuestion
   - Bash(git rev-parse:*)
   - Bash(python:*)
+disallowed-tools:
+  - AskUserQuestion
 ---
  
 # Refine Research Question
@@ -67,7 +68,9 @@ Two kinds of questions matter:
  
 **Edge-case questions** probe corners that are easy to miss. Error paths. Unusual inputs. Deprecated code. Related-but-distinct components that might get confused. Things that look the same but aren't. The "weird" version of the thing being researched.
  
-Keep the question count manageable. 1–7 questions per round is usually right, more only if there's genuinely a lot to disambiguate. Group them by research area so the user can see the structure.
+Keep the question count manageable. 0–7 questions per round is usually right, more only if there's genuinely a lot to disambiguate. Group them by research area so the user can see the structure.
+
+Don't ask a clarifying question whose answer the prompt already states explicitly — re-read the prompt for the answer before adding it to a clarifying round.
  
 ### 4. Present decomposition and questions in one turn
  
