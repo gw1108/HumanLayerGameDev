@@ -104,7 +104,7 @@ Saving is a two-step process to avoid shell-quoting bugs with large markdown con
 **Step 1** — get the target path by running:
 
 ```
-python "$(git rev-parse --show-toplevel)/create_thought.py" questions <file_name_description> [ticket]
+python "$(git rev-parse --show-toplevel)/thoughts/create_thought.py" questions <file_name_description> [ticket]
 ```
 
 The `$(git rev-parse --show-toplevel)` resolves to the repo root with forward slashes, so the command works from any subdirectory and avoids Bash interpreting backslashes in a Windows path as escape characters.

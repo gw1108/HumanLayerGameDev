@@ -6,10 +6,10 @@ writes the file directly via the Write tool. This avoids shell-quoting bugs
 that occurred when large markdown blobs were passed as a CLI argument.
 
 Usage:
-  python create_thought.py <main_folder> <file_name_description> [ticket]
+  python thoughts/create_thought.py <main_folder> <file_name_description> [ticket]
 
 Example:
-  python create_thought.py plans "lazy-sundae-mechanic" tag-a3b7c2
+  python thoughts/create_thought.py plans "lazy-sundae-mechanic" tag-a3b7c2
   -> /abs/path/to/thoughts/shared/plans/2026-04-30-ENG-tag-a3b7c2-lazy-sundae-mechanic.md
 """
 import sys
@@ -29,7 +29,8 @@ def main():
     description = sys.argv[2]
     ticket = sys.argv[3] if len(sys.argv) > 3 else None
 
-    project_root = os.path.dirname(os.path.abspath(__file__))
+    # This script lives in <project_root>/thoughts/, so go up one level.
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     folder_path = os.path.join(project_root, "thoughts", "shared", main_folder)
     os.makedirs(folder_path, exist_ok=True)
 
