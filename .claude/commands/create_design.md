@@ -21,9 +21,20 @@ Read the specified file completely (no offsets or limits). Extract:
 
 Also read any files the research document references with `file:line` notation that are critical to understanding the problem.
 
-### 2. Identify design axes
+### 2. Identify design axes and weigh the options yourself
 
-Based on the research, identify the key decisions that must be made before implementation can begin. For each axis present 2–3 concrete options, e.g.:
+Based on the research, identify the key decisions that must be made before implementation can begin. For each axis, enumerate 2–3 concrete options and weigh their pros and cons yourself first.
+
+Then decide, per axis:
+
+- **If one option is clearly best** after weighing the trade-offs, choose it. Do not ask the user — record the choice and the rationale (including the rejected alternatives) in the design document's Design Decisions section.
+- **If the choice is still genuinely unclear** — the options have real, competing trade-offs and the research doesn't settle it — that axis goes to the user in step 3.
+
+Only escalate decisions that genuinely affect the implementation path. Do not present options that are equivalent in effort or outcome.
+
+### 3. Ask the user only about the unresolved axes
+
+For each axis that survived step 2 as genuinely unclear, present it interactively:
 
 ```
 **Design Options:**
@@ -35,13 +46,10 @@ Based on the research, identify the key decisions that must be made before imple
 Which approach fits best?
 ```
 
-Only ask about decisions that genuinely affect the implementation path. Do not present options that are equivalent in effort or outcome.
-
-### 3. Iterate with the user
-
 - Present one set of options at a time; wait for the user to choose before moving on.
 - If the user's answer reveals a misunderstanding, spawn a **codebase-analyzer** or **codebase-locator** sub-agent to verify the facts, then re-present.
-- Keep iterating until every major design axis is resolved.
+- Keep iterating until every escalated axis is resolved.
+- If no axes needed escalation, skip this step entirely and go straight to saving.
 
 ### 4. Save the design
 

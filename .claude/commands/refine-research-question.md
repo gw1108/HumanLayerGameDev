@@ -1,6 +1,6 @@
 ---
 name: refine_research_question
-description: Refine and sharpen a research question. The skill works interactively. it decomposes the question into composable research areas, asks clarifying and edge-case questions, iterates with the user until the question is sharp, and saves the refined question to thoughts/shared/questions/.
+description: Refine and sharpen a research question. The skill works interactively. it decomposes the question into composable research areas, asks clarifying and edge-case questions, iterates with the user until it is clear what should be researched, and saves the refined question to thoughts/shared/questions/.
 model: opus
 allowed-tools:
   - Write
@@ -81,7 +81,7 @@ In a single response, give the user:
 3. **Your clarifying and edge-case questions**, grouped by research area.
 Combining all three in one turn lets the user redirect your framing and answer questions in a single response.
  
-### 5. Iterate until the question is sharp
+### 5. Iterate until it is clear what to research
  
 The user will respond. They might:
 - Answer some questions and skip others — skipped is fine, note it as "not specified"
@@ -91,11 +91,11 @@ The user will respond. They might:
 Update your understanding, then either:
 - Ask follow-up questions if new ambiguities emerged or important areas remain open
 - Propose the final refined question if things feel solid
-A question is "sharp enough" when the research areas are concrete, both you and the user know what's in and out, and a researcher reading just the refined question would know what to investigate without guessing.
+Keep iterating with the user until it is clear what we should research based off the question and the user's prompts. There is enough to start researching when the research areas are concrete, both you and the user know what's in and out, and a researcher reading just the refined question would know what to investigate without guessing.
  
 Aim for two or three rounds at most. If the user seems impatient or says "just go," wrap up with what you have and move to step 6 — an imperfect refinement is still useful.
  
-If the user's original question was already sharp, say so, skip extra rounds, and go straight to saving.
+If the user's original question already makes clear what to research, say so, skip extra rounds, and go straight to saving.
  
 ### 6. Save the refined question
 

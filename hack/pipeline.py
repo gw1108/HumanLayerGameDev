@@ -17,8 +17,10 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import secrets
+import signal
 import subprocess
 import sys
 import threading
@@ -32,11 +34,12 @@ from archive_thoughts import archive_thoughts  # noqa: E402
 
 RUN_ID_PATTERN = re.compile(r"tag-[a-f0-9]{6}")
 
-# Auto-advance behavior: once the tagged output file appears in the stage's
-# output_dir, wait this many seconds for claude to print its closing message
-# ("Ready to feed into /research_codebase when you are.") and then terminate
-# the agent so the next stage can start.
-AUTO_ADVANCE_GRACE_SECONDS = 5.0
+# Auto-advance behavior: the primary "stage finished" signal is a DONE marker
+# file (.pipeline_done_<RUN_ID>) that the agent is instructed to create as its
+# very last action. If the tagged output file appears but the agent never
+# writes the marker (e.g. it ignored the instruction), fall back to advancing
+# after this many seconds.
+DONE_FALLBACK_SECONDS = 60.0
 AUTO_ADVANCE_POLL_SECONDS = 2.0
 
 
@@ -50,6 +53,42 @@ def filename_tag_instruction(run_id: str) -> str:
         f"(pass it as the ticket/description prefix to create_thought.py so the "
         f"saved file looks like YYYY-MM-DD-ENG-{run_id}-<topic>.md)."
     )
+
+
+def done_file_for(run_id: str) -> Path:
+    return PROJECT_ROOT / f".pipeline_done_{run_id}"
+
+
+def done_marker_instruction(run_id: str) -> str:
+    return (
+        f" FINAL ACTION: after the output file is completely written and you have "
+        f"nothing left to do, create an empty file named '.pipeline_done_{run_id}' "
+        f"at the repo root (use the Write tool). This must be the very last thing "
+        f"you do — the pipeline orchestrator watches for it to know this stage is "
+        f"finished. Do not create it before the output file is final."
+    )
+
+
+def kill_process_tree(process: subprocess.Popen) -> None:
+    """Terminate the claude process and every child it spawned."""
+    if process.poll() is not None:
+        return
+    if sys.platform == "win32":
+        # taskkill /T walks the whole tree; plain terminate() only kills the
+        # root process and can orphan node children.
+        subprocess.run(
+            ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+            capture_output=True,
+        )
+    else:
+        try:
+            os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        except ProcessLookupError:
+            return
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
 
 
 def to_at_reference(input_value: str) -> str:
@@ -109,15 +148,15 @@ PIPELINE = [
         ),
     },
     {
-        "name": "implement_plan_yolo",
-        "command": "implement_plan_yolo",
+        "name": "implement_plan",
+        "command": "implement_plan",
         "output_dir": None,
         "terminal": True,
         "file_input": True,
         "context_template": (
             "Stage 5 of 5 (implement). plan doc: {input}. "
             "Use the implementation plan and execute every phase end-to-end with "
-            "verification, per the implement_plan_yolo skill."
+            "verification, per the implement_plan skill."
         ),
     },
 ]
@@ -156,13 +195,22 @@ def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
     )
     context = stage["context_template"].format(input=formatted_input)
     if not is_terminal:
-        context += filename_tag_instruction(run_id)
+        context += filename_tag_instruction(run_id) + done_marker_instruction(run_id)
     claude_arg = f"/{stage['command']} {context}"
 
     print(f"\n{'=' * 70}")
     print(f"  STAGE: {stage['name']}  [RUN_ID: {run_id}]")
     print(f"  INPUT: {input_value}")
     print(f"{'=' * 70}")
+
+    done_file = done_file_for(run_id)
+    if done_file.exists():
+        done_file.unlink()
+
+    popen_kwargs = {}
+    if sys.platform != "win32":
+        # Put claude in its own process group so kill_process_tree can killpg.
+        popen_kwargs["start_new_session"] = True
 
     started_at = time.time()
     process = subprocess.Popen(
@@ -172,10 +220,11 @@ def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
             claude_arg,
         ],
         cwd=str(PROJECT_ROOT),
+        **popen_kwargs,
     )
 
     if is_terminal:
-        # Terminal stages (e.g. implement_plan_yolo) modify code rather than
+        # Terminal stages (e.g. implement_plan) modify code rather than
         # writing a tagged .md, so there is nothing to auto-detect. Let claude
         # run to natural completion.
         process.wait()
@@ -188,25 +237,34 @@ def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
     auto_advanced = {"value": False}
 
     def watcher() -> None:
+        output_seen_at: float | None = None
         while process.poll() is None:
-            output_file = detect_output_with_tag(
-                stage["output_dir"], run_id, started_at
-            )
-            if output_file is not None:
+            if done_file.exists():
+                auto_advanced["value"] = True
                 print(
-                    f"\n[pipeline] Detected output: {output_file.name}. "
-                    f"Auto-advancing in {AUTO_ADVANCE_GRACE_SECONDS:.0f}s "
-                    f"(letting claude finish its closing message)..."
+                    f"\n[pipeline] DONE marker detected ({done_file.name}). "
+                    f"Closing this agent and starting next stage.\n"
                 )
-                time.sleep(AUTO_ADVANCE_GRACE_SECONDS)
-                if process.poll() is None:
-                    auto_advanced["value"] = True
-                    print("[pipeline] Closing this agent and starting next stage.\n")
-                    process.terminate()
-                    try:
-                        process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
+                kill_process_tree(process)
+                return
+            if output_seen_at is None:
+                output_file = detect_output_with_tag(
+                    stage["output_dir"], run_id, started_at
+                )
+                if output_file is not None:
+                    output_seen_at = time.time()
+                    print(
+                        f"\n[pipeline] Detected output: {output_file.name}. "
+                        f"Waiting up to {DONE_FALLBACK_SECONDS:.0f}s for the "
+                        f"DONE marker ({done_file.name})..."
+                    )
+            elif time.time() - output_seen_at > DONE_FALLBACK_SECONDS:
+                auto_advanced["value"] = True
+                print(
+                    "\n[pipeline] No DONE marker within the fallback window; "
+                    "advancing on the tagged output file alone.\n"
+                )
+                kill_process_tree(process)
                 return
             time.sleep(AUTO_ADVANCE_POLL_SECONDS)
 
@@ -215,6 +273,9 @@ def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
 
     process.wait()
     thread.join(timeout=10)
+
+    if done_file.exists():
+        done_file.unlink()
 
     output_file = detect_output_with_tag(stage["output_dir"], run_id, started_at)
 
