@@ -34,12 +34,12 @@ from archive_thoughts import archive_thoughts  # noqa: E402
 
 RUN_ID_PATTERN = re.compile(r"tag-[a-f0-9]{6}")
 
-# Auto-advance behavior: the primary "stage finished" signal is a DONE marker
+# Auto-advance behavior: the only "stage finished" signal is a DONE marker
 # file (.pipeline_done_<RUN_ID>) that the agent is instructed to create as its
-# very last action. If the tagged output file appears but the agent never
-# writes the marker (e.g. it ignored the instruction), fall back to advancing
-# after this many seconds.
-DONE_FALLBACK_SECONDS = 60.0
+# very last action. There is no timeout fallback — interactive stages may run
+# indefinitely; if the agent never writes the marker, the stage only ends when
+# the claude session itself exits (and the tagged output, if any, is picked up
+# then).
 AUTO_ADVANCE_POLL_SECONDS = 2.0
 
 
@@ -294,32 +294,12 @@ def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
     auto_advanced = {"value": False}
 
     def watcher() -> None:
-        output_seen_at: float | None = None
         while process.poll() is None:
             if done_file.exists():
                 auto_advanced["value"] = True
                 print(
                     f"\n[pipeline] DONE marker detected ({done_file.name}). "
                     f"Closing this agent and starting next stage.\n"
-                )
-                kill_process_tree(process)
-                return
-            if output_seen_at is None:
-                output_file = detect_output_with_tag(
-                    stage["output_dir"], run_id, started_at
-                )
-                if output_file is not None:
-                    output_seen_at = time.time()
-                    print(
-                        f"\n[pipeline] Detected output: {output_file.name}. "
-                        f"Waiting up to {DONE_FALLBACK_SECONDS:.0f}s for the "
-                        f"DONE marker ({done_file.name})..."
-                    )
-            elif time.time() - output_seen_at > DONE_FALLBACK_SECONDS:
-                auto_advanced["value"] = True
-                print(
-                    "\n[pipeline] No DONE marker within the fallback window; "
-                    "advancing on the tagged output file alone.\n"
                 )
                 kill_process_tree(process)
                 return
