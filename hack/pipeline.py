@@ -188,6 +188,63 @@ def detect_output_with_tag(output_dir: str, run_id: str, started_at: float) -> P
     return None
 
 
+def other_run_in_same_stage(run_id: str, stage_index: int) -> bool:
+    """True if any other active run's state file shows it in this stage."""
+    for sf in PROJECT_ROOT.glob(".pipeline_state_tag-*.json"):
+        if run_id in sf.name:
+            continue
+        try:
+            data = json.loads(sf.read_text())
+        except (json.JSONDecodeError, OSError):
+            return True  # unreadable state: assume a conflict rather than guess
+        if data.get("current_stage") == stage_index:
+            return True
+    return False
+
+
+def adopt_untagged_output(f: Path, run_id: str) -> Path:
+    """Rename an untagged output file so it carries the run tag."""
+    new = f.with_name(f"{f.stem}-{run_id}{f.suffix}")
+    if not new.exists():
+        f.rename(new)
+        f = new
+    print(f"\n[pipeline] Adopted untagged output as: {f.name}")
+    return f
+
+
+def recover_untagged_output(stage: dict, run_id: str, started_at: float) -> Path | None:
+    """Fallback when no tagged output exists: look for an untagged .md written
+    during this stage. Files tagged for another run are provably not ours, so
+    only tag-free files are candidates. Adopt one only when it is provably
+    ours (its content references our run_id) or when ambiguity is impossible
+    (a single candidate and no concurrent run in the same stage); otherwise
+    list the candidates for manual recovery."""
+    path = PROJECT_ROOT / stage["output_dir"]
+    if not path.exists():
+        return None
+    untagged = [
+        f for f in path.glob("*.md")
+        if f.stat().st_mtime >= started_at and not RUN_ID_PATTERN.search(f.name)
+    ]
+    if not untagged:
+        return None
+    ours = [
+        f for f in untagged
+        if run_id in f.read_text(encoding="utf-8", errors="ignore")
+    ]
+    if ours:
+        return adopt_untagged_output(max(ours, key=lambda f: f.stat().st_mtime), run_id)
+    if len(untagged) == 1 and not other_run_in_same_stage(run_id, PIPELINE.index(stage)):
+        return adopt_untagged_output(untagged[0], run_id)
+    print(f"\n[pipeline] Found untagged candidate(s) in {stage['output_dir']} but "
+          f"cannot safely tell which belongs to run '{run_id}':")
+    for f in sorted(untagged, key=lambda f: f.stat().st_mtime, reverse=True):
+        print(f"    {f.name}")
+    print(f"  If one is yours, rename it to include '{run_id}' and run: "
+          f"python hack/pipeline.py --resume {run_id}")
+    return None
+
+
 def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
     is_terminal = stage.get("terminal", False)
     formatted_input = (
@@ -278,6 +335,8 @@ def run_stage(stage: dict, input_value: str, run_id: str) -> Path | None:
         done_file.unlink()
 
     output_file = detect_output_with_tag(stage["output_dir"], run_id, started_at)
+    if output_file is None:
+        output_file = recover_untagged_output(stage, run_id, started_at)
 
     if output_file is not None:
         print(f"\n  OUTPUT: {output_file.relative_to(PROJECT_ROOT)}")
