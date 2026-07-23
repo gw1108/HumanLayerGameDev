@@ -14,3 +14,4 @@ What assumptions did you make that you never stated explicitly?
 
 What could I have done differently to make this session smoother?
 
+work back and forth with me, starting with your open questions and concerns before implementing the plan.
