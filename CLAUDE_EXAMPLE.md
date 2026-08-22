@@ -38,19 +38,6 @@ Do NOT modify or scan files in the /thoughts/ folder unless specified. Do NOT sc
 
 ---
 
-## Art assets
-
-When a task needs a 3D model or art asset, in priority order:
-1. Search the premade asset packs under `/Assets/Synty` for something usable or `/Assets/Textures/kenney_fantasy-ui-borders` for UI.
-2. If nothing fits, use the 3D modeling skills (`create-3d-asset` / `generate-3d-asset-hunyuan`).
-3. If that fails, fall back to Unity primitives.
-
-### UI text glyphs
-
-Every TMP label in the project uses `LiberationSans SDF`, whose atlas is **static** — 250 glyphs, roughly ASCII plus Latin-1. Anything outside it (e.g. `✕` U+2715) renders as a missing-glyph box. `·` U+00B7 and `×` U+00D7 are in the atlas and are what the existing UI uses; reach for those before assuming a nicer symbol will draw.
-
----
-
 ### Code Intelligence
 
 Prefer LSP over Grep/Glob/Read for code navigation:
