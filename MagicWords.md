@@ -16,4 +16,6 @@ What could I have done differently to make this session smoother?
 
 In files and in chat, including inside code blocks, Claude writes text as continuous lines with no hard wrapping at fixed column widths and no leading-space alignment. Structural formatting (headers, separators, indented lists) is fine.
 
+The user hasn't heard from you in a while — say in a few words what you're doing, then continue.
+
 work back and forth with me, starting with your open questions and concerns before implementing the plan.
